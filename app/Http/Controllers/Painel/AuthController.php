@@ -15,7 +15,7 @@ class AuthController extends Controller
     // Exibe a tela de login do painel
     public function login()
     {
-        return view('painel.auth.login');
+        return view('auth.login');
     }
 
     // Processa o login
@@ -30,14 +30,17 @@ class AuthController extends Controller
         $remember = $request->has('remember');
         
         if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
+            if (auth()->user()->role === 'admin') {
+                return redirect()->intended(route('admin.dashboard'));
+            }
 
-            return redirect()->intended(route('painel.dashboard'));
+            
+            return redirect()->intended(route('user.dashboard'));
+            
         }
 
         return back()->withErrors([
-            'email' => 'As credenciais fornecidas não correspondem aos nossos registros.',
-            'password' => 'Teste'
+            'email' => 'As credenciais fornecidas não correspondem aos nossos registros.'
         ])->onlyInput('email', 'password');
     }
 
@@ -54,7 +57,7 @@ class AuthController extends Controller
 
     public function showRegister()
     {
-        return view('painel.auth.register');
+        return view('auth.register');
     }
 
     // Processa o cadastro do novo usuário
@@ -78,12 +81,12 @@ class AuthController extends Controller
         Auth::login($user);
 
         // Redireciona para o dashboard do painel
-        return redirect()->route('painel.dashboard');
+        return redirect()->route('admin.dashboard');
     }
 
     public function showLinkRequestForm()
     {
-        return view('painel.auth.forgot-password');
+        return view('auth.forgot-password');
     }
 
     public function sendResetLinkEmail(Request $request)
@@ -102,7 +105,7 @@ class AuthController extends Controller
 
     public function showResetForm(Request $request, $token = null)
     {
-        return view('painel.auth.reset-password')->with(
+        return view('auth.reset-password')->with(
             ['token' => $token, 'email' => $request->email]
         );
     }
